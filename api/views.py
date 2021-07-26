@@ -13,7 +13,7 @@ from .utils.rsps import Rsps
 
 
 def index(request):
-    return HttpResponse("Hello world!");
+    return render(request,'index.html')
 
 
 def login(request):
