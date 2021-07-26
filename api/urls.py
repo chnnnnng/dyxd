@@ -1,0 +1,46 @@
+from django.urls import path
+
+from . import views
+
+urlpatterns = [
+    path('', views.index, name='index'),
+    path('login', views.login, name='login'),
+    path('setUserDetail', views.setUserDetail, name='setUserDetail'),
+    path('createCheckinSheet', views.createCheckinSheet, name='createCheckinSheet'),
+    path('getBookAndRoster', views.getBookAndRoster, name='getBookAndRoster'),
+    path('getCheckinsheet', views.getCheckinsheet, name='getCheckinsheet'),
+    path('getCreated', views.getCreated, name='getCreated'),
+    path('getCheckinbook', views.getCheckinbook, name='getCheckinbook'),
+    path('getRoster', views.getRoster, name='getRoster'),
+    path('createCheckinbook', views.createCheckinbook, name='createCheckinbook'),
+    path('createRoster', views.createRoster, name='createRoster'),
+    path('deleteRoster', views.deleteRoster, name='deleteRoster'),
+    path('deleteCheckinbook', views.deleteCheckinbook, name='deleteCheckinbook'),
+    path('deleteCheckinsheet', views.deleteCheckinsheet, name='deleteCheckinsheet'),
+    path('exposeLocation', views.exposeLocation, name='exposeLocation'),
+    path('unexposeLocation', views.unexposeLocation, name='unexposeLocation'),
+    path('discover', views.discover, name='discover'),
+    path('getIdentitycode', views.getIdentitycode, name='getIdentitycode'),
+    path('putCheckin', views.putCheckin, name='putCheckin'),
+    path('setCheckinsheetStatus', views.setCheckinsheetStatus, name='setCheckinsheetStatus'),
+    path('setCheckinbookStatus', views.setCheckinbookStatus, name='setCheckinbookStatus'),
+    path('getCheckinitems', views.getCheckinitems, name='getCheckinitems'),
+    path('setCheckinitemStatus', views.setCheckinitemStatus, name='setCheckinitemStatus'),
+    path('getCheckinbookData', views.getCheckinbookData, name='getCheckinbookData'),
+    path('getLocation', views.getLocation, name='getLocation'),
+    path('getPasswordInfo', views.getPasswordInfo, name='getPasswordInfo'),
+    path('setPassword', views.setPassword, name='setPassword'),
+    path('deletePassword', views.deletePassword, name='deletePassword'),
+    path('getHistory', views.getHistory, name='getHistory'),
+    path('display', views.display, name='display'),
+    path('checkinTest', views.checkinTest, name='checkinTest'),  # FORTESTUSAGE
+    path('setLink', views.setLink, name='setLink'),
+    path('deleteLink', views.deleteLink, name='deleteLink'),
+    path('userinfo', views.userinfo, name='userinfo'),
+    path('pushWifilist', views.pushWifilist, name='pushWifilist'),
+    path('pullWifilist', views.pullWifilist, name='pullWifilist'),
+    path('getF2fInfo', views.getF2fInfo, name='getF2fInfo'),
+    path('pullCheckinInfo', views.pullCheckinInfo, name='pullCheckinInfo'),
+    path('startF2f', views.startF2f, name='startF2f'),
+    path('stopF2f', views.stopF2f, name='stopF2f')
+]

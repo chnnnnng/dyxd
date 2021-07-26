@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>扫码签公屏|点一下到小程序</title>
+    <!-- import CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <style>
+
+        [v-cloak] {
+            display: none;
+        }
+
+        .el-carousel__item {
+            text-align: center;
+        }
+
+        .el-carousel__item:nth-child(2n) {
+            background-color: #dcdcc7;
+        }
+
+        .el-carousel__item:nth-child(2n+1) {
+            background-color: #d3dce6;
+        }
+
+        .el-carousel__item #qrcode {
+            display: inline-block;
+            width: 500px;
+            height: 500px;
+            margin-top: calc(37vh - 250px);
+        }
+
+        .el-carousel__item #qrcode2 {
+            display: inline-block;
+            width: 500px;
+            height: 500px;
+            margin-top: calc(37vh - 250px);
+        }
+
+        .el-carousel__item h1 {
+            display: inline-block;
+            font-size: 3em;
+            line-height: 3em;
+            margin-top: calc(37vh - 1.5em)
+        }
+    </style>
+</head>
+<body>
+<div id="app" v-cloak>
+    <el-container direction="vertical">
+        <el-card shadow="always" style="height:15vh">
+            <el-steps :active="activeStep" align-center>
+                <el-step title="就绪" description='使用"点一下到"小程序扫描下方二维码'></el-step>
+                <el-step title="进行" description="公屏展示签到码，成员扫码签到"></el-step>
+                <el-step title="结束" description="点击结束签到，在小程序查看结果"></el-step>
+            </el-steps>
+        </el-card>
+        <el-main>
+            <el-carousel direction="vertical" :autoplay="false" height="75vh" indicator-position="none" ref="car">
+                <el-carousel-item>
+                    <div id="qrcode"></div>
+                </el-carousel-item>
+                <el-carousel-item>
+                    <div id="qrcode2"></div>
+                </el-carousel-item>
+                <el-carousel-item>
+                    <h1 style="color: #0c4d8e">签到结束 ↖(^ω^)↗</h1>
+                </el-carousel-item>
+                <el-carousel-item style="background-color: #f2cec8">
+                    <h1 style="color: #ad1717">╮(￣▽￣"")╭</h1>
+                </el-carousel-item>
+            </el-carousel>
+        </el-main>
+    </el-container>
+</div>
+</body>
+<!-- import Vue before Element -->
+<script src="https://unpkg.com/vue/dist/vue.min.js"></script>
+<!-- import JavaScript -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<!-- import QRCode.js -->
+{% load static %}
+<script src="{% static 'qrcode.min.js' %}"></script>
+<!-- import axios -->
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    var app = new Vue({
+        el: '#app',
+        data: {
+            visible: false,
+            activeStep: 1,
+            ctr: 0,
+            cycleTime: 5000,//五秒循环一次
+            cycleNum: 11, //循环12次
+            cycleNum2: 60, // 成员扫码时间限制为5分钟
+            itv: null,
+            itv2: null,
+            itv3: null,
+            qrcode: null,
+            qrcode2: null,
+            checkinsheet_id: null,
+            lasttime: null,
+            checkinedList: []
+        },
+        methods: {
+            nextStep() {
+                if (this.activeStep++ > 2) this.activeStep = 0;
+            },
+            startItv() {
+                this.checkStatus()
+                this.itv = setInterval(function () {
+                    if (app.ctr++ < app.cycleNum) {
+                        app.checkStatus()
+
+                    } else {
+                        app.showError('等待超时，请刷新界面重试（等待有效期：60秒）')
+                    }
+                }, this.cycleTime)
+            },
+            checkStatus() {
+                axios.get('?action=check')
+                    .then(function (response) {
+                        if (response.data.data == null) {
+                            console.log("就绪")
+                            app.makeQrcode()
+                        } else {
+                            console.log("进行中")
+                            app.connected2Checkinsheet(response.data.data)
+                        }
+                    })
+                    .catch(function (error) {
+                        app.showError('连接错误，请重试')
+                    });
+            },
+            makeQrcode() {
+                if (this.qrcode == null) {
+                    this.qrcode = new QRCode("qrcode", {
+                        text: this.generateText(),
+                        width: 500,
+                        height: 500,
+                        colorDark: "#2b4c7e",
+                        colorLight: "#00000000"
+                    });
+                } else {
+                    this.qrcode.makeCode(this.generateText())
+                }
+            },
+            generateText() {
+                var dI = this.getCookie('displayID')
+                if (dI == null) {
+                    return ""
+                } else {
+                    return JSON.stringify({
+                        displayID: dI,
+                        time: Date.now().toString()
+                    })
+                }
+            },
+            getCookie(name) {
+                var arr, reg = new RegExp("(^| )" + name + "=([^;]*)(;|$)");
+                if (arr = document.cookie.match(reg))
+                    return unescape(arr[2]);
+                else
+                    return null;
+            },
+            showError(msg) {
+                clearInterval(this.itv)
+                clearInterval(this.itv2)
+                this.$message({type: 'error', message: msg, duration: 0})
+                this.$refs.car.setActiveItem(3)
+            },
+            showEnd() {
+                clearInterval(this.itv2)
+                this.$refs.car.setActiveItem(2)
+                this.nextStep()
+            },
+            connected2Checkinsheet(data) {
+                clearInterval(this.itv)
+                this.nextStep()
+                this.$refs.car.setActiveItem(1)
+                this.checkinsheet_id = data.checkinsheet_id
+                this.lasttime = data.time
+                this.$message({
+                    'type': 'success',
+                    'message': '正在签到 「' + data.checkinsheet_name + '」',
+                    'duration': 5000
+                })
+                this.makeQrcode2()
+                this.startItv2()
+            },
+            startItv2() {
+                app.ctr = 0
+                this.itv2 = setInterval(function () {
+                    if (app.ctr++ < app.cycleNum2) {
+                        app.checkStatus2()
+                    } else {
+                        app.showError('等待超时，（等待有效期：5分）')
+                    }
+                }, this.cycleTime)
+            },
+            startPopCheckined() {
+                if(this.checkinedList.length>0){
+                    this.itv3 = setInterval(function () {
+                    if (app.checkinedList.length > 0) {
+                        app.$notify({
+                            title: app.checkinedList[0].user_name + " 「到」",
+                            message: app.checkinedList[0].user_identity_code,
+                            type: 'success'
+                        })
+                        app.checkinedList.shift()
+                    } else {
+                        clearInterval(this.itv3)
+                    }
+                }, 4500/this.checkinedList.length)
+                }
+            },
+            checkStatus2() {
+                axios.get('?action=check2&lasttime=' + this.lasttime)
+                    .then(function (response) {
+                        if (response.data.code == 0) {
+                            console.log("已结束")
+                            app.showEnd()
+                        } else {
+                            console.log("进行中")
+                            app.makeQrcode2()
+                            response.data.data.sort(function (a, b) {
+                                return (new Date(a.time)) - (new Date(b.time))
+                            })
+                            console.log(response.data.data)
+                            for (i in response.data.data) {
+                                app.checkinedList.push(response.data.data[i])
+                                app.lasttime = response.data.data[i].time
+                            }
+                            app.startPopCheckined()
+                        }
+                    })
+                    .catch(function (error) {
+                        app.showError('连接错误，请重试')
+                        console.log(error)
+                    });
+            },
+            makeQrcode2() {
+                if (this.qrcode2 == null) {
+                    this.qrcode2 = new QRCode("qrcode2", {
+                        text: this.generateText2(),
+                        width: 500,
+                        height: 500,
+                        colorDark: "#24635e",
+                        colorLight: "#00000000"
+                    });
+                } else {
+                    this.qrcode2.makeCode(this.generateText2())
+                }
+            },
+            generateText2() {
+                var time = new Date();
+                return JSON.stringify({
+                    c: this.checkinsheet_id + time.getMilliseconds(),
+                    t: time.getTime(),
+                })
+            },
+            isMobile() {
+                let flag = navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i)
+                return flag;
+            },
+        },
+
+        created: function () {
+            if (this.isMobile()) {
+                this.$alert("请在PC设备访问此页面！","警告")
+            } else {
+                this.startItv()
+            }
+        }
+    })
+
+
+</script>
+</html>
