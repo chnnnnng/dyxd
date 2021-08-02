@@ -38,10 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'api.apps.ApiConfig',
-    'corsheaders', #用于支持跨域访问
+    'corsheaders', #用于支持跨域访问 #不需要了
 ]
 
-CORS_ORIGIN_ALLOW_ALL = True #用于支持跨域访问
+CORS_ORIGIN_ALLOW_ALL = True #用于支持跨域访问 #不需要了
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
